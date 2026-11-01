@@ -50,10 +50,10 @@ object CarrierDetector {
      */
     fun getCarrierName(mcc: String, mnc: String): String {
         return when {
-            mcc == "460" && mnc in listOf("00", "02", "04", "07", "08") -> "中国移动"
+            mcc == "460" && mnc in listOf("00", "02", "04", "07", "08", "13") -> "中国移动"
             mcc == "460" && mnc in listOf("01", "06", "09") -> "中国联通"
             mcc == "460" && mnc in listOf("03", "05", "11") -> "中国电信"
-            mcc == "460" && mnc == "15" -> "中国广电"
+            mcc == "460" && mnc in listOf("15", "60") -> "中国广电"
             else -> "未知运营商"
         }
     }

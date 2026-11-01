@@ -15,12 +15,12 @@
 
 ## 支持的运营商及 APN
 
-| 运营商 | MCC | MNC | 主要 APN |
+| 运营商 | MCC | MNC | APN 类型 |
 |--------|-----|-----|----------|
-| 中国移动 | 460 | 00/02/04/07/08 | CMNET, CMWAP, CMMMS, CMIOT |
-| 中国联通 | 460 | 01/06/09 | 3GNET, 3GWAP, UNIMMS, UNINET |
-| 中国电信 | 460 | 03/05/11 | CTNET, CTWAP, CTMMS |
-| 中国广电 | 460 | 15 | CBNET, CBNET-IOT |
+| 中国移动 | 460 | 00/02/04/07/08/13 | CMNET(互联网), CMWAP(彩信), IMS(VoLTE), CMIOT(物联网), CMLTE, CMTDS |
+| 中国联通 | 460 | 01/06/09 | 3GNET(互联网), 3GWAP(彩信), IMS(VoLTE), WONET, UNINET |
+| 中国电信 | 460 | 03/05/11 | CTNET(互联网), CTWAP(彩信), IMS(VoLTE), SOS(紧急), CTLTE, CTM2M(物联网) |
+| 中国广电 | 460 | 15/60 | CBNET(互联网), CMWAP(彩信), IMS(VoLTE), CBNET-IOT(物联网) |
 
 ## 导入方式说明
 
@@ -38,6 +38,19 @@ Android 系统对 APN 设置有严格权限限制，本应用提供以下导入�
 在 GitHub Actions 中自动编译 APK，可在 [Actions 页面](https://github.com/ssmhdssmhd/MXAPN/actions) 下载最新构建产物。
 
 ## 版本更新日志
+
+### v0.0.3 (2026-11-02)
+
+**补全所有运营商接入点**
+
+- APN 总数从 13 个扩展到 49 个
+- 中国移动：21 个（含所有 MNC 00/02/04/07/08/13 的互联网、彩信、IMS、物联网、LTE、TD 接入点）
+- 中国联通：11 个（含 MNC 01/06/09 的互联网、彩信、IMS、WONET、UNINET 接入点）
+- 中国电信：10 个（含 MNC 03/11 的互联网、彩信、IMS、SOS、LTE、物联网接入点）
+- 中国广电：7 个（含 MNC 15/60 的互联网、彩信、IMS、物联网接入点）
+- 新增 IMS (VoLTE)、SOS (紧急)、物联网等专用接入点类型
+- 更新协议为 IPV4V6 以支持 5G
+- 更新 CarrierDetector MNC 映射表
 
 ### v0.0.2 (2026-11-02)
 
