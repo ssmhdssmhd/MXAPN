@@ -1,0 +1,107 @@
+# MXAPN - APN 接入点管理工具
+
+> 自动获取最新接入点 (APN)，支持中国移动、中国联通、中国电信、中国广电四大运营商，推荐最合适的接入点，用户可手动选择导入使用。
+
+[![Build MXAPN APK](https://github.com/ssmhdssmhd/MXAPN/actions/workflows/build.yml/badge.svg)](https://github.com/ssmhdssmhd/MXAPN/actions/workflows/build.yml)
+
+## 功能特性
+
+- 🌐 **网络获取最新 APN** - 自动从 GitHub 仓库拉取最新的接入点数据
+- 📱 **四大运营商支持** - 移动、联通、电信、广电全覆盖
+- 🎯 **智能推荐** - 根据当前 SIM 卡自动识别运营商，推荐最佳接入点
+- 🔄 **手动选择** - 用户可自由切换运营商和接入点
+- 📥 **多种导入方式** - 支持直接导入、Root 导入、复制信息、打开系统设置
+- 📋 **本地备用数据** - 网络不可用时自动使用本地内置数据
+
+## 支持的运营商及 APN
+
+| 运营商 | MCC | MNC | 主要 APN |
+|--------|-----|-----|----------|
+| 中国移动 | 460 | 00/02/04/07/08 | CMNET, CMWAP, CMMMS, CMIOT |
+| 中国联通 | 460 | 01/06/09 | 3GNET, 3GWAP, UNIMMS, UNINET |
+| 中国电信 | 460 | 03/05/11 | CTNET, CTWAP, CTMMS |
+| 中国广电 | 460 | 15 | CBNET, CBNET-IOT |
+
+## 导入方式说明
+
+Android 系统对 APN 设置有严格权限限制，本应用提供以下导入方式：
+
+1. **直接导入** - 通过 ContentResolver 写入（需系统签名权限，普通应用可能失败）
+2. **Root 导入** - 通过 Root 权限执行命令写入（设备需已 Root）
+3. **复制信息** - 将 APN 信息复制到剪贴板，用户手动在系统设置中添加
+4. **打开设置** - 直接打开系统 APN 设置页面，引导用户手动配置
+
+> 💡 对于大多数未 Root 的设备，推荐使用「复制信息」+「打开设置」的方式手动配置。
+
+## 下载安装
+
+在 GitHub Actions 中自动编译 APK，可在 [Actions 页面](https://github.com/ssmhdssmhd/MXAPN/actions) 下载最新构建产物。
+
+## 版本更新日志
+
+### v0.0.1 (2026-11-02)
+
+**初始版本发布**
+
+- 实现从网络获取最新 APN 数据功能
+- 支持移动、联通、电信、广电四大运营商
+- 根据 SIM 卡自动检测当前运营商
+- 智能推荐最合适的接入点
+- 提供手动选择运营商和 APN 功能
+- 支持多种 APN 导入方式（直接导入/Root/复制/打开设置）
+- 内置本地备用 APN 数据
+- Material Design 3 界面
+- GitHub Actions 自动编译 APK
+
+## APN 数据更新
+
+APN 数据存储在仓库根目录的 `apn_data.json` 文件中，应用启动时会从以下地址获取最新数据：
+
+```
+https://raw.githubusercontent.com/ssmhdssmhd/MXAPN/main/apn_data.json
+```
+
+如需更新 APN 数据，只需修改 `apn_data.json` 并提交到 main 分支即可，应用会自动获取最新数据，无需更新 APK。
+
+## 项目结构
+
+```
+MXAPN/
+├── app/
+│   ├── src/main/
+│   │   ├── java/com/mx/apn/
+│   │   │   ├── MainActivity.kt          # 主界面
+│   │   │   ├── data/
+│   │   │   │   ├── ApnData.kt           # APN 数据模型
+│   │   │   │   └── ApnRepository.kt     # 数据仓库（网络/本地）
+│   │   │   ├── ui/
+│   │   │   │   ├── MainViewModel.kt     # 视图模型
+│   │   │   │   └── ApnAdapter.kt        # 列表适配器
+│   │   │   └── util/
+│   │   │       ├── CarrierDetector.kt   # 运营商检测
+│   │   │       └── ApnImporter.kt       # APN 导入工具
+│   │   ├── res/                         # 资源文件
+│   │   └── assets/apn_data.json         # 本地备用数据
+│   └── build.gradle
+├── apn_data.json                        # APN 数据（远程数据源）
+├── .github/workflows/build.yml          # GitHub Actions 编译
+└── README.md
+```
+
+## 技术栈
+
+- Kotlin
+- AndroidX / Material Design 3
+- OkHttp (网络请求)
+- Gson (JSON 解析)
+- MVVM 架构
+- RecyclerView
+- GitHub Actions (CI/CD)
+
+## 最低系统要求
+
+- Android 5.0 (API 21) 及以上
+
+## License
+
+MIT License

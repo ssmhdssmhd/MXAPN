@@ -1,0 +1,88 @@
+name: Build MXAPN APK
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  APP_NAME: MXAPN
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.5'
+
+      - name: Generate Gradle Wrapper
+        run: gradle wrapper --gradle-version 8.5
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --stacktrace
+        continue-on-error: true
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION_NAME=$(grep versionName app/build.gradle | head -1 | sed 's/.*versionName "\(.*\)".*/\1/')
+          BUILD_TIME=$(date +"%Y%m%d%H%M")
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "BUILD_TIME=$BUILD_TIME" >> $GITHUB_OUTPUT
+          echo "FULL_VERSION=${VERSION_NAME}_${BUILD_TIME}" >> $GITHUB_OUTPUT
+
+      - name: Rename APK
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk "${{ env.APP_NAME }}.${{ steps.version.outputs.VERSION_NAME }}.${{ steps.version.outputs.BUILD_TIME }}.apk"
+          ls -la *.apk
+
+      - name: Upload Debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ steps.version.outputs.FULL_VERSION }}-debug
+          path: ${{ env.APP_NAME }}.${{ steps.version.outputs.VERSION_NAME }}.${{ steps.version.outputs.BUILD_TIME }}.apk
+
+      - name: Upload Release APK (if exists)
+        if: hashFiles('app/build/outputs/apk/release/app-release-unsigned.apk') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ steps.version.outputs.FULL_VERSION }}-release
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ${{ env.APP_NAME }}.${{ steps.version.outputs.VERSION_NAME }}.${{ steps.version.outputs.BUILD_TIME }}.apk
+          name: ${{ env.APP_NAME }} v${{ steps.version.outputs.VERSION_NAME }}
+          body: |
+            ## MXAPN 版本更新日志
+            - 版本号: ${{ steps.version.outputs.VERSION_NAME }}
+            - 编译时间: ${{ steps.version.outputs.BUILD_TIME }}
+            - 自动构建于 GitHub Actions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
