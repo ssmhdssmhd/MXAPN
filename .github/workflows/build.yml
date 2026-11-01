@@ -50,7 +50,7 @@ jobs:
 
       - name: Build Signed Release APK
         env:
-          SIGNING_KEYSTORE_PATH: app/mxapn-release.keystore
+          SIGNING_KEYSTORE_PATH: mxapn-release.keystore
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
