@@ -67,17 +67,27 @@ jobs:
 
       - name: Rename APKs
         run: |
+          echo "=== Release output files ==="
+          ls -la app/build/outputs/apk/release/ 2>/dev/null || echo "No release output dir"
           cp app/build/outputs/apk/debug/app-debug.apk "${{ env.APP_NAME }}.${{ steps.version.outputs.VERSION_NAME }}.${{ steps.version.outputs.BUILD_TIME }}-debug.apk"
-          if [ -f app/build/outputs/apk/release/app-release.apk ]; then
-            cp app/build/outputs/apk/release/app-release.apk "${{ env.APP_NAME }}.${{ steps.version.outputs.VERSION_NAME }}.${{ steps.version.outputs.BUILD_TIME }}-release.apk"
+          # 查找 release APK（可能是 app-release.apk 或其他名称）
+          RELEASE_APK=$(find app/build/outputs/apk/release/ -name "*.apk" -type f 2>/dev/null | head -1)
+          if [ -n "$RELEASE_APK" ]; then
+            cp "$RELEASE_APK" "${{ env.APP_NAME }}.${{ steps.version.outputs.VERSION_NAME }}.${{ steps.version.outputs.BUILD_TIME }}-release.apk"
+            echo "Release APK found: $RELEASE_APK"
+          else
+            echo "WARNING: No release APK found"
           fi
           ls -la *.apk
 
       - name: Verify APK signature
         run: |
-          if [ -f app/build/outputs/apk/release/app-release.apk ]; then
+          RELEASE_APK=$(find app/build/outputs/apk/release/ -name "*.apk" -type f 2>/dev/null | head -1)
+          if [ -n "$RELEASE_APK" ]; then
             echo "=== Release APK 签名信息 ==="
-            keytool -printcert -jarfile app/build/outputs/apk/release/app-release.apk || echo "签名验证命令失败"
+            keytool -printcert -jarfile "$RELEASE_APK"
+          else
+            echo "未找到 Release APK"
           fi
 
       - name: Upload Debug APK artifact
@@ -87,7 +97,7 @@ jobs:
           path: ${{ env.APP_NAME }}.${{ steps.version.outputs.VERSION_NAME }}.${{ steps.version.outputs.BUILD_TIME }}-debug.apk
 
       - name: Upload Signed Release APK artifact
-        if: hashFiles('app/build/outputs/apk/release/app-release.apk') != ''
+        if: hashFiles('MXAPN.*-release.apk') != ''
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APP_NAME }}-${{ steps.version.outputs.FULL_VERSION }}-release-signed
