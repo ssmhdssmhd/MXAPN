@@ -9,8 +9,8 @@
     <string name="carrier_telecom">中国电信</string>
     <string name="carrier_broadnet">中国广电</string>
     <string name="recommended">推荐</string>
-    <string name="import">导入</string>
-    <string name="copy">复制</string>
+    <string name="action_import">导入</string>
+    <string name="action_copy">复制</string>
     <string name="detail">详情</string>
     <string name="version">版本</string>
 </resources>
