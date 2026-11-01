@@ -1,6 +1,23 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
+// 读取签名配置（优先从环境变量，其次从 local.properties）
+def signingKeyStorePath = System.getenv("SIGNING_KEYSTORE_PATH") ?: ""
+def signingKeyAlias = System.getenv("SIGNING_KEY_ALIAS") ?: ""
+def signingKeyPassword = System.getenv("SIGNING_KEY_PASSWORD") ?: ""
+def signingStorePassword = System.getenv("SIGNING_STORE_PASSWORD") ?: ""
+
+// 从 local.properties 读取（本地开发用）
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localProps.load(new FileInputStream(localPropsFile))
+    if (signingKeyStorePath.isEmpty()) signingKeyStorePath = localProps.getProperty("signing.storeFile", "")
+    if (signingKeyAlias.isEmpty()) signingKeyAlias = localProps.getProperty("signing.keyAlias", "")
+    if (signingKeyPassword.isEmpty()) signingKeyPassword = localProps.getProperty("signing.keyPassword", "")
+    if (signingStorePassword.isEmpty()) signingStorePassword = localProps.getProperty("signing.storePassword", "")
+}
+
 android {
     namespace 'com.mx.apn'
     compileSdk 34
@@ -9,15 +26,31 @@ android {
         applicationId "com.mx.apn"
         minSdk 21
         targetSdk 34
-        versionCode 1
-        versionName "0.0.1"
+        versionCode 2
+        versionName "0.0.2"
         vectorDrawables.useSupportLibrary = true
+    }
+
+    // 签名配置
+    if (signingKeyStorePath && new File(signingKeyStorePath).exists()) {
+        signingConfigs {
+            release {
+                storeFile file(signingKeyStorePath)
+                storePassword signingStorePassword
+                keyAlias signingKeyAlias
+                keyPassword signingKeyPassword
+            }
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // 如果签名配置可用，则签名
+            if (signingKeyStorePath && new File(signingKeyStorePath).exists()) {
+                signingConfig signingConfigs.release
+            }
         }
         debug {
             minifyEnabled false
