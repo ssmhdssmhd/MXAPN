@@ -18,6 +18,10 @@ if (localPropsFile.exists()) {
     if (signingStorePassword.isEmpty()) signingStorePassword = localProps.getProperty("signing.storePassword", "")
 }
 
+// 使用 Gradle 的 file() 解析（相对于当前模块目录）
+def keystoreFile = signingKeyStorePath ? file(signingKeyStorePath) : null
+def hasKeystore = keystoreFile != null && keystoreFile.exists()
+
 android {
     namespace 'com.mx.apn'
     compileSdk 34
@@ -32,10 +36,10 @@ android {
     }
 
     // 签名配置
-    if (signingKeyStorePath && new File(signingKeyStorePath).exists()) {
+    if (hasKeystore) {
         signingConfigs {
             release {
-                storeFile file(signingKeyStorePath)
+                storeFile keystoreFile
                 storePassword signingStorePassword
                 keyAlias signingKeyAlias
                 keyPassword signingKeyPassword
@@ -48,7 +52,7 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             // 如果签名配置可用，则签名
-            if (signingKeyStorePath && new File(signingKeyStorePath).exists()) {
+            if (hasKeystore) {
                 signingConfig signingConfigs.release
             }
         }
