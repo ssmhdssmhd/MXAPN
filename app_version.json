@@ -1,0 +1,6 @@
+{
+  "versionName": "0.0.3",
+  "versionCode": 3,
+  "apkUrl": "https://github.com/ssmhdssmhd/MXAPN/releases/download/v0.0.3/MXAPN.0.0.3-release.apk",
+  "changelog": "v0.0.3 更新内容：\n- 补全四大运营商所有 APN 接入点（共 49 个）\n- 新增 IMS(VoLTE)、SOS(紧急)、物联网等专用接入点\n- 协议升级为 IPV4V6 支持 5G\n- 修复 APK 签名，可正常安装\n- 新增 App 版本更新检测功能"
+}

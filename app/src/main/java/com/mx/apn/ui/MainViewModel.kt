@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.mx.apn.data.Apn
 import com.mx.apn.data.ApnRepository
 import com.mx.apn.data.Carrier
+import com.mx.apn.network.UpdateChecker
 import com.mx.apn.util.CarrierDetector
 import kotlinx.coroutines.launch
 
@@ -17,6 +18,16 @@ import kotlinx.coroutines.launch
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val repository = ApnRepository(app.applicationContext)
+    private val updateChecker = UpdateChecker()
+
+    enum class UpdateEventType { CHECKING, NEW_VERSION, LATEST, ERROR }
+
+    data class UpdateEvent(
+        val id: Int,
+        val type: UpdateEventType,
+        val info: UpdateChecker.UpdateInfo? = null,
+        val message: String = ""
+    )
 
     private val _loading = MutableLiveData<Boolean>()
     val loading: LiveData<Boolean> = _loading
@@ -44,6 +55,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _simInfo = MutableLiveData<CarrierDetector.SimInfo>()
     val simInfo: LiveData<CarrierDetector.SimInfo> = _simInfo
+
+    private val _updateEvent = MutableLiveData<UpdateEvent?>()
+    val updateEvent: LiveData<UpdateEvent?> = _updateEvent
+
+    private var updateEventId = 0
 
     /**
      * 加载 APN 数据
@@ -96,5 +112,47 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      */
     fun refresh() {
         loadData()
+    }
+
+    /**
+     * 当前 App 版本名
+     */
+    fun getCurrentVersionName(): String {
+        return try {
+            val app = getApplication<Application>()
+            app.packageManager.getPackageInfo(app.packageName, 0).versionName ?: "0.0.0"
+        } catch (e: Exception) {
+            "0.0.0"
+        }
+    }
+
+    /**
+     * 检查 App 版本更新
+     */
+    fun checkAppUpdate() {
+        viewModelScope.launch {
+            _updateEvent.value = UpdateEvent(++updateEventId, UpdateEventType.CHECKING)
+
+            val current = getCurrentVersionName()
+            val result = updateChecker.check(current)
+
+            _updateEvent.value = result.fold(
+                onSuccess = { info ->
+                    if (info != null) {
+                        UpdateEvent(++updateEventId, UpdateEventType.NEW_VERSION, info)
+                    } else {
+                        UpdateEvent(++updateEventId, UpdateEventType.LATEST, null, current)
+                    }
+                },
+                onFailure = { e ->
+                    UpdateEvent(
+                        ++updateEventId,
+                        UpdateEventType.ERROR,
+                        null,
+                        e.message ?: "未知错误"
+                    )
+                }
+            )
+        }
     }
 }

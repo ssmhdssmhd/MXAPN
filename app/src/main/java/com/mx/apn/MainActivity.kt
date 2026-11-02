@@ -1,7 +1,9 @@
 package com.mx.apn
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -28,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
     private lateinit var adapter: ApnAdapter
+    private var lastUpdateEventId = 0
 
     companion object {
         private const val PERMISSION_REQUEST_CODE = 1001
@@ -50,6 +53,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.title = getString(R.string.app_name)
+        supportActionBar?.subtitle = "v${viewModel.getCurrentVersionName()}"
     }
 
     private fun setupRecyclerView() {
@@ -128,6 +132,41 @@ class MainActivity : AppCompatActivity() {
                 binding.tvSimInfo.text = "SIM: 未检测到或无权限"
             }
         }
+
+        viewModel.updateEvent.observe(this) { event ->
+            if (event == null || event.id == lastUpdateEventId) return@observe
+            lastUpdateEventId = event.id
+
+            when (event.type) {
+                MainViewModel.UpdateEventType.CHECKING -> {
+                    binding.btnCheckUpdate.isEnabled = false
+                    binding.btnCheckUpdate.text = "检测中..."
+                }
+                MainViewModel.UpdateEventType.NEW_VERSION -> {
+                    binding.btnCheckUpdate.isEnabled = true
+                    binding.btnCheckUpdate.text = "检查更新"
+                    event.info?.let { showUpdateDialog(it) }
+                }
+                MainViewModel.UpdateEventType.LATEST -> {
+                    binding.btnCheckUpdate.isEnabled = true
+                    binding.btnCheckUpdate.text = "检查更新"
+                    Toast.makeText(
+                        this,
+                        "已是最新版本 v${event.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                MainViewModel.UpdateEventType.ERROR -> {
+                    binding.btnCheckUpdate.isEnabled = true
+                    binding.btnCheckUpdate.text = "检查更新"
+                    Toast.makeText(
+                        this,
+                        "检查更新失败: ${event.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
     }
 
     private fun setupListeners() {
@@ -142,8 +181,30 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnCheckUpdate.setOnClickListener {
-            viewModel.refresh()
-            Toast.makeText(this, "正在检查更新...", Toast.LENGTH_SHORT).show()
+            viewModel.checkAppUpdate()
+        }
+    }
+
+    /**
+     * 显示新版本对话框
+     */
+    private fun showUpdateDialog(info: com.mx.apn.network.UpdateChecker.UpdateInfo) {
+        val changelog = if (info.changelog.isBlank()) "无更新说明" else info.changelog
+        AlertDialog.Builder(this)
+            .setTitle("发现新版本 v${info.versionName}")
+            .setMessage(changelog)
+            .setPositiveButton("去下载") { _, _ ->
+                openDownloadUrl(info.apkUrl)
+            }
+            .setNegativeButton("以后再说", null)
+            .show()
+    }
+
+    private fun openDownloadUrl(url: String) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        } catch (e: Exception) {
+            Toast.makeText(this, "无法打开下载链接: $url", Toast.LENGTH_LONG).show()
         }
     }
 
