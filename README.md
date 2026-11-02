@@ -35,7 +35,9 @@ Android 系统对 APN 设置有严格权限限制，本应用提供以下导入�
 
 ## 下载安装
 
-在 GitHub Actions 中自动编译 APK，可在 [Actions 页面](https://github.com/ssmhdssmhd/MXAPN/actions) 下载最新构建产物。
+在 [Releases 页面](https://github.com/ssmhdssmhd/MXAPN/releases/latest) 下载最新的已签名 APK（`MXAPN.x.x.x-release.apk`）安装即可。
+
+App 内「检查更新」会自动读取 GitHub Releases 最新版本，发现新版本时可直接跳转下载；若 Releases 接口不可用，会回退读取仓库中的 `app_version.json`。
 
 ## 版本更新日志
 
