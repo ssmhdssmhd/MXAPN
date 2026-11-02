@@ -1,6 +1,6 @@
 {
-  "versionName": "0.0.4",
-  "versionCode": 4,
-  "apkUrl": "https://github.com/ssmhdssmhd/MXAPN/releases/download/v0.0.4/MXAPN.0.0.4-release.apk",
-  "changelog": "v0.0.4 更新内容：\n- 修复“检查更新”功能，现在会真正检测 App 新版本\n- 发现新版本可一键跳转下载\n- 工具栏显示当前版本号\n- 补全四大运营商全部 APN 接入点"
+  "versionName": "0.0.5",
+  "versionCode": 5,
+  "apkUrl": "https://github.com/ssmhdssmhd/MXAPN/releases/download/v0.0.5/MXAPN.0.0.5-release.apk",
+  "changelog": "v0.0.5 更新内容：\n- 新增「显示全部运营商接入点」开关，可查看并直接选择全部接入点\n- 导入时支持选择 SIM 卡槽（卡1 / 卡2）\n- 新增自动导入：查重、只新增不修改，不影响正常使用\n- 修复并确保检查更新可用"
 }
