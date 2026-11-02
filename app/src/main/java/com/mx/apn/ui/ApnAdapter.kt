@@ -13,13 +13,21 @@ import com.mx.apn.R
 import com.mx.apn.data.Apn
 
 /**
+ * 列表项：APN + 所属运营商（全部模式下用于标注来源）
+ */
+data class ApnItem(
+    val apn: Apn,
+    val carrierName: String
+)
+
+/**
  * APN 列表适配器
  */
 class ApnAdapter(
     private val onItemClick: (Apn) -> Unit,
     private val onImportClick: (Apn) -> Unit,
     private val onCopyClick: (Apn) -> Unit
-) : ListAdapter<Apn, ApnAdapter.ApnViewHolder>(ApnDiffCallback()) {
+) : ListAdapter<ApnItem, ApnAdapter.ApnViewHolder>(ApnDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ApnViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -40,10 +48,15 @@ class ApnAdapter(
         private val btnImport: TextView = itemView.findViewById(R.id.btnImport)
         private val btnCopy: TextView = itemView.findViewById(R.id.btnCopy)
 
-        fun bind(apn: Apn) {
+        fun bind(item: ApnItem) {
+            val apn = item.apn
             tvName.text = apn.name
             tvApn.text = apn.apn
-            tvType.text = "类型: ${apn.type}"
+            tvType.text = if (item.carrierName.isNotEmpty()) {
+                "${item.carrierName} · 类型: ${apn.type} · MCC/MNC: ${apn.mcc}/${apn.mnc}"
+            } else {
+                "类型: ${apn.type} · MCC/MNC: ${apn.mcc}/${apn.mnc}"
+            }
             tvNote.text = apn.note
 
             // 推荐标记
@@ -62,12 +75,12 @@ class ApnAdapter(
         }
     }
 
-    class ApnDiffCallback : DiffUtil.ItemCallback<Apn>() {
-        override fun areItemsTheSame(oldItem: Apn, newItem: Apn): Boolean {
-            return oldItem.id == newItem.id
+    class ApnDiffCallback : DiffUtil.ItemCallback<ApnItem>() {
+        override fun areItemsTheSame(oldItem: ApnItem, newItem: ApnItem): Boolean {
+            return oldItem.apn.id == newItem.apn.id
         }
 
-        override fun areContentsTheSame(oldItem: Apn, newItem: Apn): Boolean {
+        override fun areContentsTheSame(oldItem: ApnItem, newItem: ApnItem): Boolean {
             return oldItem == newItem
         }
     }

@@ -178,11 +178,20 @@
                             android:text=""
                             android:textSize="12sp"
                             android:textColor="@color/text_secondary" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switchShowAll"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="显示全部运营商接入点"
+                            android:textSize="14sp" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
                 <!-- APN 列表 -->
                 <TextView
+                    android:id="@+id/tvApnListTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"

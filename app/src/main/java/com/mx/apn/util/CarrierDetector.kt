@@ -1,6 +1,8 @@
 package com.mx.apn.util
 
 import android.content.Context
+import android.os.Build
+import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import android.util.Log
 
@@ -17,6 +19,44 @@ object CarrierDetector {
         val operatorName: String,
         val isAvailable: Boolean
     )
+
+    /**
+     * SIM 卡槽信息
+     * @param slotIndex 卡槽序号（0 开始，界面显示为卡1/卡2）
+     * @param subId 订阅 ID，用于多卡 APN 写入
+     */
+    data class SimSlot(
+        val slotIndex: Int,
+        val subId: Int,
+        val displayName: String,
+        val carrierName: String
+    ) {
+        fun label(): String = if (carrierName.isNotEmpty()) "$displayName · $carrierName" else displayName
+    }
+
+    /**
+     * 获取当前插入的 SIM 卡槽列表
+     * 无权限或异常时返回空列表
+     */
+    fun getSimSlots(context: Context): List<SimSlot> {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1) return emptyList()
+        return try {
+            val sm = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE)
+                as? SubscriptionManager ?: return emptyList()
+            val infos = sm.activeSubscriptionInfoList ?: return emptyList()
+            infos.mapIndexed { index, info ->
+                SimSlot(
+                    slotIndex = index,
+                    subId = info.subscriptionId,
+                    displayName = "卡${index + 1}",
+                    carrierName = info.carrierName?.toString() ?: ""
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "获取 SIM 卡槽失败", e)
+            emptyList()
+        }
+    }
 
     /**
      * 获取当前 SIM 卡的运营商信息

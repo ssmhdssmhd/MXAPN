@@ -18,6 +18,7 @@ import com.mx.apn.data.Apn
 import com.mx.apn.data.Carrier
 import com.mx.apn.databinding.ActivityMainBinding
 import com.mx.apn.ui.ApnAdapter
+import com.mx.apn.ui.ApnItem
 import com.mx.apn.ui.MainViewModel
 import com.mx.apn.util.ApnImporter
 import com.mx.apn.util.CarrierDetector
@@ -91,9 +92,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewModel.selectedCarrier.observe(this) { carrier ->
-            carrier?.let {
-                adapter.submitList(it.apns)
-                binding.tvCarrierInfo.text = "${it.name} (${it.nameEn})"
+            if (carrier != null) {
+                renderApnList()
             }
         }
 
@@ -183,6 +183,32 @@ class MainActivity : AppCompatActivity() {
         binding.btnCheckUpdate.setOnClickListener {
             viewModel.checkAppUpdate()
         }
+
+        binding.switchShowAll.setOnCheckedChangeListener { _, _ ->
+            renderApnList()
+        }
+    }
+
+    /**
+     * 渲染 APN 列表：单运营商模式或全部运营商模式
+     */
+    private fun renderApnList() {
+        val carriers = viewModel.carriers.value ?: return
+        val selected = viewModel.selectedCarrier.value
+
+        if (binding.switchShowAll.isChecked) {
+            val items = carriers.flatMap { carrier ->
+                carrier.apns.map { ApnItem(it, carrier.name) }
+            }
+            adapter.submitList(items)
+            binding.tvApnListTitle.text =
+                "全部接入点（${carriers.size} 家运营商，共 ${items.size} 个）"
+            binding.tvCarrierInfo.text = "当前显示全部运营商接入点，可直接选择导入"
+        } else if (selected != null) {
+            adapter.submitList(selected.apns.map { ApnItem(it, selected.name) })
+            binding.tvApnListTitle.text = "可用接入点（${selected.apns.size} 个）"
+            binding.tvCarrierInfo.text = "${selected.name} (${selected.nameEn})"
+        }
     }
 
     /**
@@ -253,6 +279,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun showImportOptions(apn: Apn) {
         val options = arrayOf(
+            "自动导入（推荐，仅新增不修改）",
             "直接导入（需系统权限）",
             "Root 导入",
             "复制信息后手动设置",
@@ -263,23 +290,39 @@ class MainActivity : AppCompatActivity() {
             .setTitle("导入 APN - ${apn.name}")
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> {
-                        val result = ApnImporter.importViaContentResolver(this, apn)
-                        showImportResult(result)
+                    0 -> chooseSimSlot { subId ->
+                        showImportResult(ApnImporter.autoImport(this, apn, subId))
                     }
-                    1 -> {
-                        val result = ApnImporter.importViaRoot(apn)
-                        showImportResult(result)
+                    1 -> chooseSimSlot { subId ->
+                        showImportResult(ApnImporter.importViaContentResolver(this, apn, subId))
                     }
-                    2 -> {
-                        val result = ApnImporter.copyToClipboard(this, apn)
-                        showImportResult(result)
+                    2 -> chooseSimSlot { subId ->
+                        showImportResult(ApnImporter.importViaRoot(apn, subId))
                     }
-                    3 -> {
-                        val result = ApnImporter.openApnSettings(this)
-                        showImportResult(result)
-                    }
+                    3 -> showImportResult(ApnImporter.copyToClipboard(this, apn))
+                    4 -> showImportResult(ApnImporter.openApnSettings(this))
                 }
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    /**
+     * 选择要写入的 SIM 卡槽（卡1 / 卡2）
+     * 仅一张卡或无法获取时使用默认卡槽
+     */
+    private fun chooseSimSlot(onChosen: (Int) -> Unit) {
+        val slots = CarrierDetector.getSimSlots(this)
+        if (slots.size <= 1) {
+            onChosen(slots.firstOrNull()?.subId ?: -1)
+            return
+        }
+
+        val labels = slots.map { "${it.label()}（subId ${it.subId}）" }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("选择要新增到的 SIM 卡")
+            .setItems(labels) { _, which ->
+                onChosen(slots[which].subId)
             }
             .setNegativeButton("取消", null)
             .show()
